@@ -1,0 +1,38 @@
+name: Build and Deploy when Contentful Publish
+
+on:
+    repository_dispatch: 
+      types: [publish-event]
+
+jobs:
+
+  Website:
+    runs-on: ubuntu-latest
+    env:
+      CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }} 
+      CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }} 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with: 
+         token: ${{ secrets.REPO_ACCESS_TOKEN }}
+         ref: ${{ github.event.client_payload.ref }}
+      - run: echo ${{ github.event.client_payload.sha }}
+      - name: ls
+        run: ls
+     
+      - name: Installing Nodejs
+        uses: actions/setup-node@v2-beta
+        with:
+           node-version: '12'
+
+      - name: Installing Gatsby
+        run: yarn global add gatsby-cli
+
+      - name: Installing Frontend dependencies and run test
+        run: yarn install
+
+      - name: build Gatsby
+        run: npm run build
